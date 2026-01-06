@@ -152,7 +152,7 @@
             background: linear-gradient(135deg, #ff7675 0%, #fab1a0 100%);
             color: white;
             position: absolute;
-            transition: all 0.15s ease;
+            transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             z-index: 100;
         }
 
@@ -389,7 +389,7 @@
             background: linear-gradient(135deg, #ff7675 0%, #fab1a0 100%);
             color: white;
             position: absolute;
-            transition: all 0.15s ease;
+            transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             z-index: 100;
         }
 
@@ -688,7 +688,7 @@
         ];
         let currentPleading = 0;
 
-        // Move button away from cursor - Main page
+        // Move button away from cursor - Main page (Improved for better evasion)
         function moveButton(e) {
             const btn = document.getElementById('btnNo');
             const container = document.getElementById('buttonContainer');
@@ -702,46 +702,46 @@
             const cursorX = e.clientX - containerRect.left;
             const cursorY = e.clientY - containerRect.top;
             
-            // Calculate safe zone around cursor
-            const safeZone = 80;
+            // Larger safe zone to make it harder to click
+            const safeZone = 120;
             
-            // Calculate available positions
-            let newX, newY;
+            // Calculate all possible positions
+            const positions = [
+                { x: 50, y: 0 },
+                { x: containerRect.width - btnWidth - 50, y: 0 },
+                { x: (containerRect.width - btnWidth) / 2, y: 0 },
+                { x: 20, y: 50 },
+                { x: containerRect.width - btnWidth - 20, y: 50 },
+                { x: (containerRect.width - btnWidth) / 2, y: 30 },
+                { x: 10, y: -20 },
+                { x: containerRect.width - btnWidth - 10, y: -20 },
+                { x: (containerRect.width - btnWidth) / 2, y: -15 },
+                { x: 30, y: 60 },
+                { x: containerRect.width - btnWidth - 30, y: 60 },
+            ];
             
-            // Try to place button on the right side (where "Gak Mau!" originally is)
-            const rightSideX = containerRect.width - btnWidth - 50;
-            const leftSideX = 50;
-            const centerX = (containerRect.width - btnWidth) / 2;
+            // Find a position that's far from cursor
+            let bestPosition = positions[0];
+            let maxDistance = 0;
             
-            // Try right side first
-            if (cursorX < rightSideX - safeZone || cursorY < 0 || cursorY > containerRect.height - btnHeight) {
-                // Safe to place on right
-                newX = rightSideX + 50;
-                newY = 0;
-            } 
-            // Try left side
-            else if (cursorX > leftSideX + btnWidth + safeZone) {
-                newX = leftSideX;
-                newY = 0;
-            }
-            // Try center top
-            else if (cursorY > btnHeight + safeZone) {
-                newX = centerX;
-                newY = 0;
-            }
-            // Default: put on far right
-            else {
-                newX = containerRect.width - btnWidth - 10;
-                newY = 0;
+            for (const pos of positions) {
+                const posCenterX = pos.x + btnWidth / 2;
+                const posCenterY = pos.y + btnHeight / 2;
+                const distance = Math.sqrt(Math.pow(posCenterX - cursorX, 2) + Math.pow(posCenterY - cursorY, 2));
+                
+                if (distance > maxDistance) {
+                    maxDistance = distance;
+                    bestPosition = pos;
+                }
             }
             
             btn.style.position = 'absolute';
-            btn.style.left = newX + 'px';
-            btn.style.top = newY + 'px';
+            btn.style.left = bestPosition.x + 'px';
+            btn.style.top = bestPosition.y + 'px';
             btn.style.right = 'auto';
         }
 
-        // Move button away from cursor - Pleading page
+        // Move button away from cursor - Pleading page (Improved)
         function moveButton2(e) {
             const btn = document.getElementById('btnNo2');
             const container = document.getElementById('pleadingButtons');
@@ -751,45 +751,99 @@
             const btnHeight = 90;
             
             const cursorX = e.clientX - containerRect.left;
+            const cursorY = e.clientY - containerRect.top;
             
-            // Place button on the right side
-            const rightSideX = containerRect.width - btnWidth - 50;
+            // Calculate all possible positions
+            const positions = [
+                { x: 20, y: 0 },
+                { x: containerRect.width - btnWidth - 20, y: 0 },
+                { x: (containerRect.width - btnWidth) / 2, y: 0 },
+                { x: 10, y: 30 },
+                { x: containerRect.width - btnWidth - 10, y: 30 },
+                { x: (containerRect.width - btnWidth) / 2, y: 20 },
+                { x: 5, y: -15 },
+                { x: containerRect.width - btnWidth - 5, y: -15 },
+            ];
             
-            if (cursorX < rightSideX - 100) {
-                btn.style.position = 'absolute';
-                btn.style.right = '50px';
-                btn.style.left = 'auto';
-                btn.style.top = '0';
-            } else {
-                // Put on far right
-                btn.style.position = 'absolute';
-                btn.style.right = '10px';
-                btn.style.left = 'auto';
-                btn.style.top = '0';
+            // Find a position that's far from cursor
+            let bestPosition = positions[0];
+            let maxDistance = 0;
+            
+            for (const pos of positions) {
+                const posCenterX = pos.x + btnWidth / 2;
+                const posCenterY = pos.y + btnHeight / 2;
+                const distance = Math.sqrt(Math.pow(posCenterX - cursorX, 2) + Math.pow(posCenterY - cursorY, 2));
+                
+                if (distance > maxDistance) {
+                    maxDistance = distance;
+                    bestPosition = pos;
+                }
             }
+            
+            btn.style.position = 'absolute';
+            btn.style.left = bestPosition.x + 'px';
+            btn.style.top = bestPosition.y + 'px';
+            btn.style.right = 'auto';
         }
 
-        // Handle click on "Gak Mau!" button - just shake and move
+        // Handle click on "Gak Mau!" button - move to random position
         function handleBtnNoClick() {
             const btn = document.getElementById('btnNo');
-            btn.style.transform = 'scale(0.9)';
-            setTimeout(() => {
-                btn.style.transform = 'scale(1)';
-            }, 100);
-            // Random move
             const container = document.getElementById('buttonContainer');
-            const randomX = container.offsetWidth - 220;
-            btn.style.left = randomX + 'px';
-            btn.style.top = '0';
+            const containerRect = container.getBoundingClientRect();
+            
+            const btnWidth = 200;
+            const btnHeight = 90;
+            
+            // Generate random positions
+            const positions = [
+                { x: 50, y: 0 },
+                { x: containerRect.width - btnWidth - 50, y: 0 },
+                { x: (containerRect.width - btnWidth) / 2, y: 0 },
+                { x: 20, y: 50 },
+                { x: containerRect.width - btnWidth - 20, y: 50 },
+                { x: (containerRect.width - btnWidth) / 2, y: 30 },
+                { x: 10, y: -20 },
+                { x: containerRect.width - btnWidth - 10, y: -20 },
+            ];
+            
+            // Pick a random position
+            const randomPos = positions[Math.floor(Math.random() * positions.length)];
+            
+            btn.style.position = 'absolute';
+            btn.style.left = randomPos.x + 'px';
+            btn.style.top = randomPos.y + 'px';
+            btn.style.right = 'auto';
         }
 
         // Handle click on "Tetap Gak Mau!" button
         function handleBtnNo2Click() {
             const btn = document.getElementById('btnNo2');
-            btn.style.transform = 'scale(0.9)';
-            setTimeout(() => {
-                btn.style.transform = 'scale(1)';
-            }, 100);
+            const container = document.getElementById('pleadingButtons');
+            const containerRect = container.getBoundingClientRect();
+            
+            const btnWidth = 220;
+            const btnHeight = 90;
+            
+            // Generate random positions
+            const positions = [
+                { x: 20, y: 0 },
+                { x: containerRect.width - btnWidth - 20, y: 0 },
+                { x: (containerRect.width - btnWidth) / 2, y: 0 },
+                { x: 10, y: 30 },
+                { x: containerRect.width - btnWidth - 10, y: 30 },
+                { x: (containerRect.width - btnWidth) / 2, y: 20 },
+                { x: 5, y: -15 },
+            ];
+            
+            // Pick a random position
+            const randomPos = positions[Math.floor(Math.random() * positions.length)];
+            
+            btn.style.position = 'absolute';
+            btn.style.left = randomPos.x + 'px';
+            btn.style.top = randomPos.y + 'px';
+            btn.style.right = 'auto';
+            
             nextPleading();
         }
 
