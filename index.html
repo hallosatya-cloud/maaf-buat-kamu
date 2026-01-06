@@ -119,14 +119,14 @@
         .button-container {
             display: flex;
             justify-content: center;
-            gap: 200px;
+            gap: 40px;
             flex-wrap: wrap;
             align-items: flex-start;
             position: relative;
             min-height: 150px;
         }
 
-        .yes-button-wrapper {
+        .yes-button-wrapper, .no-button-wrapper {
             flex-shrink: 0;
         }
 
@@ -152,7 +152,7 @@
             background: linear-gradient(135deg, #ff7675 0%, #fab1a0 100%);
             color: white;
             position: absolute;
-            transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transition: all 0.1s ease;
             z-index: 100;
         }
 
@@ -388,9 +388,7 @@
         .btn-no-pleading {
             background: linear-gradient(135deg, #ff7675 0%, #fab1a0 100%);
             color: white;
-            position: absolute;
-            transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            z-index: 100;
+            cursor: pointer;
         }
 
         /* User Reason Section */
@@ -495,41 +493,42 @@
         /* Responsive Design */
         @media (max-width: 600px) {
             .question-text {
-                font-size: 1.8em;
+                font-size: 1.5em;
             }
             
             .question-emoji {
-                font-size: 3em;
+                font-size: 2.5em;
             }
             
             .question-btn {
-                padding: 20px 35px;
-                font-size: 1.2em;
+                padding: 15px 25px;
+                font-size: 1em;
             }
             
             .button-container {
-                gap: 120px;
+                gap: 15px;
+                min-height: 120px;
             }
             
             .pleading-buttons {
-                gap: 120px;
+                gap: 15px;
             }
             
             .header h1 {
-                font-size: 2em;
+                font-size: 1.8em;
             }
             
             .card {
-                padding: 20px;
+                padding: 15px;
             }
             
             .card-emoji {
-                font-size: 2em;
+                font-size: 1.5em;
             }
             
             .forgive-btn {
-                padding: 15px 35px;
-                font-size: 1.2em;
+                padding: 12px 25px;
+                font-size: 1em;
             }
             
             .reason-columns {
@@ -586,7 +585,9 @@
                 <div class="yes-button-wrapper">
                     <button class="question-btn btn-yes" onclick="showApology()">Mau Dong! 💖</button>
                 </div>
-                <button class="question-btn btn-no" id="btnNo" onmousemove="moveButton(event)" onclick="handleBtnNoClick()">Gak Mau! 😤</button>
+                <div class="no-button-wrapper">
+                    <button class="question-btn btn-no" id="btnNo" style="cursor: not-allowed; position: static;" disabled>Gak Mau! 😤</button>
+                </div>
             </div>
         </div>
 
@@ -598,7 +599,7 @@
                 <div class="yes-button-wrapper">
                     <button class="question-btn btn-yes" onclick="showApology()">Yauda deh, Maafin! 💕</button>
                 </div>
-                <button class="question-btn btn-no btn-no-pleading" id="btnNo2" onmousemove="moveButton2(event)" onclick="handleBtnNo2Click()">Tetap Gak Mau! 😤</button>
+                <button class="question-btn btn-no btn-no-pleading" id="btnNo2" onclick="showApology()">Tetap Gak Mau! 😤</button>
             </div>
         </div>
 
@@ -678,49 +679,35 @@
             return false;
         }
 
-        // Pleading messages array
-        const pleadingMessages = [
-            "Jangan gitu dong...",
-            "Aku sudah sadar kok...",
-            "Maafin ya...",
-            "Aku janji bakal lebih baik...",
-            "Yuk jangan bermuram duria..."
-        ];
-        let currentPleading = 0;
-
-        // Move button away from cursor - Main page (Improved for better evasion)
+        // Move button away from cursor - Main page
         function moveButton(e) {
             const btn = document.getElementById('btnNo');
             const container = document.getElementById('buttonContainer');
             const containerRect = container.getBoundingClientRect();
             
-            // Button dimensions
-            const btnWidth = 200;
-            const btnHeight = 90;
+            // Get button dimensions
+            const btnRect = btn.getBoundingClientRect();
+            const btnWidth = btnRect.width || 200;
+            const btnHeight = btnRect.height || 90;
             
-            // Get cursor position relative to container
-            const cursorX = e.clientX - containerRect.left;
-            const cursorY = e.clientY - containerRect.top;
+            // Get cursor/touch position
+            let cursorX, cursorY;
+            if (e.touches && e.touches.length > 0) {
+                cursorX = e.touches[0].clientX - containerRect.left;
+                cursorY = e.touches[0].clientY - containerRect.top;
+            } else {
+                cursorX = e.clientX - containerRect.left;
+                cursorY = e.clientY - containerRect.top;
+            }
             
-            // Larger safe zone to make it harder to click
-            const safeZone = 120;
-            
-            // Calculate all possible positions
+            // Calculate positions within container
             const positions = [
-                { x: 50, y: 0 },
-                { x: containerRect.width - btnWidth - 50, y: 0 },
-                { x: (containerRect.width - btnWidth) / 2, y: 0 },
-                { x: 20, y: 50 },
-                { x: containerRect.width - btnWidth - 20, y: 50 },
-                { x: (containerRect.width - btnWidth) / 2, y: 30 },
-                { x: 10, y: -20 },
-                { x: containerRect.width - btnWidth - 10, y: -20 },
-                { x: (containerRect.width - btnWidth) / 2, y: -15 },
-                { x: 30, y: 60 },
-                { x: containerRect.width - btnWidth - 30, y: 60 },
+                { x: 0, y: 0 },
+                { x: containerRect.width - btnWidth, y: 0 },
+                { x: 0, y: 60 },
+                { x: containerRect.width - btnWidth, y: 60 },
             ];
             
-            // Find a position that's far from cursor
             let bestPosition = positions[0];
             let maxDistance = 0;
             
@@ -735,116 +722,31 @@
                 }
             }
             
-            btn.style.position = 'absolute';
             btn.style.left = bestPosition.x + 'px';
             btn.style.top = bestPosition.y + 'px';
-            btn.style.right = 'auto';
         }
 
-        // Move button away from cursor - Pleading page (Improved)
-        function moveButton2(e) {
-            const btn = document.getElementById('btnNo2');
-            const container = document.getElementById('pleadingButtons');
-            const containerRect = container.getBoundingClientRect();
-            
-            const btnWidth = 220;
-            const btnHeight = 90;
-            
-            const cursorX = e.clientX - containerRect.left;
-            const cursorY = e.clientY - containerRect.top;
-            
-            // Calculate all possible positions
-            const positions = [
-                { x: 20, y: 0 },
-                { x: containerRect.width - btnWidth - 20, y: 0 },
-                { x: (containerRect.width - btnWidth) / 2, y: 0 },
-                { x: 10, y: 30 },
-                { x: containerRect.width - btnWidth - 10, y: 30 },
-                { x: (containerRect.width - btnWidth) / 2, y: 20 },
-                { x: 5, y: -15 },
-                { x: containerRect.width - btnWidth - 5, y: -15 },
-            ];
-            
-            // Find a position that's far from cursor
-            let bestPosition = positions[0];
-            let maxDistance = 0;
-            
-            for (const pos of positions) {
-                const posCenterX = pos.x + btnWidth / 2;
-                const posCenterY = pos.y + btnHeight / 2;
-                const distance = Math.sqrt(Math.pow(posCenterX - cursorX, 2) + Math.pow(posCenterY - cursorY, 2));
-                
-                if (distance > maxDistance) {
-                    maxDistance = distance;
-                    bestPosition = pos;
-                }
-            }
-            
-            btn.style.position = 'absolute';
-            btn.style.left = bestPosition.x + 'px';
-            btn.style.top = bestPosition.y + 'px';
-            btn.style.right = 'auto';
-        }
-
-        // Handle click on "Gak Mau!" button - move to random position
+        // Handle click on "Gak Mau!" button
         function handleBtnNoClick() {
             const btn = document.getElementById('btnNo');
             const container = document.getElementById('buttonContainer');
             const containerRect = container.getBoundingClientRect();
             
-            const btnWidth = 200;
-            const btnHeight = 90;
+            const btnRect = btn.getBoundingClientRect();
+            const btnWidth = btnRect.width || 200;
+            const btnHeight = btnRect.height || 90;
             
-            // Generate random positions
             const positions = [
-                { x: 50, y: 0 },
-                { x: containerRect.width - btnWidth - 50, y: 0 },
-                { x: (containerRect.width - btnWidth) / 2, y: 0 },
-                { x: 20, y: 50 },
-                { x: containerRect.width - btnWidth - 20, y: 50 },
-                { x: (containerRect.width - btnWidth) / 2, y: 30 },
-                { x: 10, y: -20 },
-                { x: containerRect.width - btnWidth - 10, y: -20 },
+                { x: 0, y: 0 },
+                { x: containerRect.width - btnWidth, y: 0 },
+                { x: 0, y: 60 },
+                { x: containerRect.width - btnWidth, y: 60 },
             ];
             
-            // Pick a random position
             const randomPos = positions[Math.floor(Math.random() * positions.length)];
             
-            btn.style.position = 'absolute';
             btn.style.left = randomPos.x + 'px';
             btn.style.top = randomPos.y + 'px';
-            btn.style.right = 'auto';
-        }
-
-        // Handle click on "Tetap Gak Mau!" button
-        function handleBtnNo2Click() {
-            const btn = document.getElementById('btnNo2');
-            const container = document.getElementById('pleadingButtons');
-            const containerRect = container.getBoundingClientRect();
-            
-            const btnWidth = 220;
-            const btnHeight = 90;
-            
-            // Generate random positions
-            const positions = [
-                { x: 20, y: 0 },
-                { x: containerRect.width - btnWidth - 20, y: 0 },
-                { x: (containerRect.width - btnWidth) / 2, y: 0 },
-                { x: 10, y: 30 },
-                { x: containerRect.width - btnWidth - 10, y: 30 },
-                { x: (containerRect.width - btnWidth) / 2, y: 20 },
-                { x: 5, y: -15 },
-            ];
-            
-            // Pick a random position
-            const randomPos = positions[Math.floor(Math.random() * positions.length)];
-            
-            btn.style.position = 'absolute';
-            btn.style.left = randomPos.x + 'px';
-            btn.style.top = randomPos.y + 'px';
-            btn.style.right = 'auto';
-            
-            nextPleading();
         }
 
         // Create floating hearts
@@ -878,24 +780,7 @@
         function showPleading() {
             document.getElementById('questionPage').style.display = 'none';
             document.getElementById('pleadingSection').classList.add('show');
-            document.getElementById('pleadingText').textContent = pleadingMessages[0];
-            currentPleading = 0;
-            
-            // Reset button position
-            const btn = document.getElementById('btnNo2');
-            btn.style.position = 'absolute';
-            btn.style.right = '50px';
-            btn.style.left = 'auto';
-            btn.style.top = '0';
-        }
-
-        // Next pleading message
-        function nextPleading() {
-            currentPleading++;
-            if (currentPleading >= pleadingMessages.length) {
-                currentPleading = 0;
-            }
-            document.getElementById('pleadingText').textContent = pleadingMessages[currentPleading];
+            document.getElementById('pleadingText').textContent = "Jangan gitu donk...";
         }
 
         // Show cards with animation
@@ -946,6 +831,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             createHearts();
             initPage();
+            
+            // Add touch event handling for mobile
+            const btnNo = document.getElementById('btnNo');
+            if (btnNo) {
+                btnNo.addEventListener('touchstart', function(e) {
+                    e.preventDefault(); // Prevent default touch behavior
+                    moveButton(e);
+                });
+            }
         });
     </script>
 </body>
